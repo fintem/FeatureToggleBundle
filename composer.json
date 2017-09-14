@@ -1,0 +1,31 @@
+{
+  "name": "fintem/feature-toggle-bundle",
+  "description": "Allows to toggle features in your application",
+  "keywords": ["feature", "toggle", "flags"],
+  "homepage": "http://www.fintem.lt",
+  "type": "symfony-bundle",
+  "license": "MIT",
+  "require": {
+    "php": "^7.0",
+    "symfony/console": "~3.0",
+    "symfony/dependency-injection": "~3.0",
+    "symfony/config": "~3.0",
+    "symfony/http-kernel": "~3.0",
+    "doctrine/common": "^2.7",
+    "doctrine/orm": "^2.5",
+    "gedmo/doctrine-extensions": "^2.4",
+    "symfony/event-dispatcher": "~3.0",
+    "psr/log": "^1.0",
+    "twig/twig": "^2.4"
+  },
+  "require-dev": {
+    "phpunit/phpunit": "^5.7",
+    "friendsofphp/php-cs-fixer": "^1.12"
+  },
+  "minimum-stability": "stable",
+  "autoload": {
+    "psr-4": {
+      "Fintem\\FeatureToggleBundle\\": ""
+    }
+  }
+}

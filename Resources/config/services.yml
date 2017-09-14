@@ -1,0 +1,50 @@
+parameters:
+    feature_toggle.model.feature.class: Fintem\FeatureToggleBundle\Model\FeatureModel
+    feature_toggle.twig_extension.feature.class: Fintem\FeatureToggleBundle\Twig\FeatureExtension
+    feature_toggle.status_checker.class: Fintem\FeatureToggleBundle\Service\FeatureStatusChecker
+    feature_toggle.command.create.class: Fintem\FeatureToggleBundle\Command\FeatureCreateCommand
+    feature_toggle.command.enable.class: Fintem\FeatureToggleBundle\Command\FeatureEnableCommand
+    feature_toggle.command.disable.class: Fintem\FeatureToggleBundle\Command\FeatureDisableCommand
+
+services:
+# Models
+    feature_toggle.model.feature:
+        class: '%feature_toggle.model.feature.class%'
+        arguments:
+            - '@doctrine.orm.default_entity_manager'
+
+# Services
+    feature_toggle.status_checker:
+        class: '%feature_toggle.status_checker.class%'
+        arguments:
+            - '@logger'
+            - '@event_dispatcher'
+            - '@feature_toggle.model.feature'
+
+# Commands
+    feature_toggle.command.create:
+        class: '%feature_toggle.command.create.class%'
+        arguments:
+            - '@feature_toggle.model.feature'
+        tags:
+            - { name: console.command }
+    feature_toggle.command.enable:
+        class: '%feature_toggle.command.enable.class%'
+        arguments:
+            - '@feature_toggle.model.feature'
+        tags:
+            - { name: console.command }
+    feature_toggle.command.disable:
+        class: '%feature_toggle.command.disable.class%'
+        arguments:
+            - '@feature_toggle.model.feature'
+        tags:
+            - { name: console.command }
+
+# Twig extensions
+    feature_toggle.twig_extension.feature:
+        class: '%feature_toggle.twig_extension.feature.class%'
+        arguments:
+            - '@feature_toggle.status_checker'
+        tags:
+            - { name: twig.extension }
