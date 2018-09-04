@@ -8,6 +8,8 @@ namespace Fintem\FeatureToggleBundle\Constant;
 final class FeatureToggleEvents
 {
     const PRE_VALIDATE = 'feature_toggle.validate';
+    const PRE_ENABLE = 'feature_toggle.pre_enable';
+    const PRE_DISABLE = 'feature_toggle.pre_disable';
 
     /**
      * @param string $featureName
