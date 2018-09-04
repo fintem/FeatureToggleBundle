@@ -12,6 +12,7 @@ services:
         class: '%feature_toggle.model.feature.class%'
         arguments:
             - '@doctrine.orm.default_entity_manager'
+            - '@event_dispatcher'
 
 # Services
     feature_toggle.status_checker:
