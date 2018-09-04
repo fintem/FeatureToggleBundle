@@ -3,7 +3,10 @@
 namespace Fintem\FeatureToggleBundle\Model;
 
 use Doctrine\ORM\EntityManagerInterface;
+use Fintem\FeatureToggleBundle\Constant\FeatureToggleEvents;
 use Fintem\FeatureToggleBundle\Entity\Feature;
+use Fintem\FeatureToggleBundle\Event\FeatureAwareEvent;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
 /**
  * Class FeatureModel.
@@ -14,15 +17,20 @@ class FeatureModel
      * @var EntityManagerInterface
      */
     private $em;
+    /**
+     * @var EventDispatcherInterface
+     */
+    private $dispatcher;
 
     /**
      * FeatureModel constructor.
-     *
      * @param EntityManagerInterface $em
+     * @param EventDispatcherInterface|null $dispatcher
      */
-    public function __construct(EntityManagerInterface $em)
+    public function __construct(EntityManagerInterface $em, EventDispatcherInterface $dispatcher = null)
     {
         $this->em = $em;
+        $this->dispatcher = $dispatcher;
     }
 
     /**
@@ -87,6 +95,9 @@ class FeatureModel
     public function disable(Feature $feature, bool $flush = true)
     {
         $feature->disable();
+        if (null !== $this->dispatcher) {
+            $this->dispatcher->dispatch(FeatureToggleEvents::PRE_DISABLE, new FeatureAwareEvent($feature));
+        }
         if ($flush) {
             $this->em->flush();
         }
@@ -103,6 +114,9 @@ class FeatureModel
     public function enable(Feature $feature, bool $flush = true)
     {
         $feature->enable();
+        if (null !== $this->dispatcher) {
+            $this->dispatcher->dispatch(FeatureToggleEvents::PRE_ENABLE, new FeatureAwareEvent($feature));
+        }
         if ($flush) {
             $this->em->flush();
         }
