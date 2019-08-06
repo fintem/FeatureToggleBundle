@@ -31,15 +31,15 @@ class FeatureStatusChecker
     /**
      * FeatureStatusChecker constructor.
      *
-     * @param LoggerInterface|null          $logger
+     * @param FeatureModel $model
+     * @param LoggerInterface|null $logger
      * @param EventDispatcherInterface|null $dispatcher
-     * @param FeatureModel                  $model
      */
-    public function __construct(LoggerInterface $logger = null, EventDispatcherInterface $dispatcher = null, FeatureModel $model)
+    public function __construct(FeatureModel $model, LoggerInterface $logger = null, EventDispatcherInterface $dispatcher = null)
     {
+        $this->model = $model;
         $this->logger = $logger;
         $this->dispatcher = $dispatcher;
-        $this->model = $model;
     }
 
     /**
@@ -70,22 +70,31 @@ class FeatureStatusChecker
      */
     public function isEnabled($feature): bool
     {
-        if (!$feature instanceof Feature) {
-            $feature = $this->getByName($feature);
+        $featureName = $feature instanceof Feature ? $feature->getName() : (string) $feature;
+        if (is_string($feature)) {
+            $cached = $this->model->getCachedValue($featureName);
+            if (true === $cached) {
+                return true;
+            }
+            $feature = $this->getByName($featureName);
         }
-        if (!$feature instanceof Feature || !$feature->isEnabled()) {
-            return false;
-        }
-        if (!$this->isEnabledRecursively($feature)) {
+
+        if (!$feature instanceof Feature || !$feature->isEnabled() || !$this->isEnabledRecursively($feature)) {
+            $this->model->cache($featureName, false);
+
             return false;
         }
         if (null !== $this->dispatcher) {
             $eventName = sprintf('%s.%s', FeatureToggleEvents::PRE_VALIDATE, $feature->getName());
             $event = $this->dispatcher->dispatch($eventName, new FeatureValidateEvent($feature));
             if (!$event->isValid()) {
+                $this->model->cache($featureName, false);
+
                 return false;
             }
         }
+
+        $this->model->cache($featureName, true);
 
         return true;
     }

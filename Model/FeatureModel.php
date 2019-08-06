@@ -2,10 +2,12 @@
 
 namespace Fintem\FeatureToggleBundle\Model;
 
+use Doctrine\Common\Cache\Cache;
 use Doctrine\ORM\EntityManagerInterface;
 use Fintem\FeatureToggleBundle\Constant\FeatureToggleEvents;
 use Fintem\FeatureToggleBundle\Entity\Feature;
 use Fintem\FeatureToggleBundle\Event\FeatureAwareEvent;
+use Fintem\FeatureToggleBundle\Service\CacheKeyGeneratorInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
 /**
@@ -21,16 +23,85 @@ class FeatureModel
      * @var EventDispatcherInterface
      */
     private $dispatcher;
+    /**
+     * @var Cache
+     */
+    private $cache;
+    /**
+     * @var CacheKeyGeneratorInterface
+     */
+    private $cacheKeyGenerator;
 
     /**
      * FeatureModel constructor.
-     * @param EntityManagerInterface $em
+     *
+     * @param EntityManagerInterface        $em
      * @param EventDispatcherInterface|null $dispatcher
      */
     public function __construct(EntityManagerInterface $em, EventDispatcherInterface $dispatcher = null)
     {
         $this->em = $em;
         $this->dispatcher = $dispatcher;
+    }
+
+    /**
+     * @param Cache $cache
+     *
+     * @return $this
+     */
+    public function setCache(Cache $cache)
+    {
+        $this->cache = $cache;
+
+        return $this;
+    }
+
+    /**
+     * @param CacheKeyGeneratorInterface $cacheKeyGenerator
+     *
+     * @return $this
+     */
+    public function setCacheKeyGenerator(CacheKeyGeneratorInterface $cacheKeyGenerator)
+    {
+        $this->cacheKeyGenerator = $cacheKeyGenerator;
+
+        return $this;
+    }
+
+    /**
+     * @param string $featureName
+     *
+     * @return bool|null
+     */
+    public function getCachedValue(string $featureName)
+    {
+        if (null === $this->cache || null === $this->cacheKeyGenerator) {
+            return null;
+        }
+
+        $cacheKey = $this->cacheKeyGenerator->generate($featureName);
+        if (!$this->cache->contains($cacheKey)) {
+            return null;
+        }
+
+        return (bool) $this->cache->fetch($cacheKey);
+    }
+
+    /**
+     * @param string $featureName
+     * @param bool   $value
+     *
+     * @return bool
+     */
+    public function cache(string $featureName, bool $value)
+    {
+        if (null === $this->cache || null === $this->cacheKeyGenerator) {
+            return false;
+        }
+
+        $cacheKey = $this->cacheKeyGenerator->generate($featureName);
+
+        return $this->cache->save($cacheKey, $value, 0);
     }
 
     /**
@@ -144,5 +215,41 @@ class FeatureModel
         $repo = $this->em->getRepository(Feature::class);
 
         return $repo->findOneBy(['name' => $featureName]);
+    }
+
+    /**
+     * @param Feature $feature
+     * @param bool    $clearDependencies
+     *
+     * @return $this
+     */
+    public function clearCache(Feature $feature, bool $clearDependencies = true)
+    {
+        if ($clearDependencies) {
+            foreach ($feature->getDependencies() as $dependency) {
+                $this->clearCache($dependency);
+            }
+        }
+        $featureName = $feature->getName();
+        $cacheKey = $this->cacheKeyGenerator->generate($featureName);
+        $this->cache->delete($cacheKey);
+
+        return $this;
+    }
+
+    /**
+     * @return bool
+     */
+    public function hasCache()
+    {
+        return $this->cache instanceof Cache;
+    }
+
+    /**
+     * @return bool
+     */
+    public function hasCacheKeyGenerator()
+    {
+        return $this->cacheKeyGenerator instanceof CacheKeyGeneratorInterface;
     }
 }
