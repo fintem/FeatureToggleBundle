@@ -172,7 +172,9 @@ class FeatureModel
         if ($flush) {
             $this->em->flush();
         }
-        $this->clearCache($feature);
+        if (null !== $this->cache && null !== $this->cacheKeyGenerator) {
+            $this->clearCache($feature);
+        }
 
         return $this;
     }
@@ -192,7 +194,9 @@ class FeatureModel
         if ($flush) {
             $this->em->flush();
         }
-        $this->clearCache($feature);
+        if (null !== $this->cache && null !== $this->cacheKeyGenerator) {
+            $this->clearCache($feature);
+        }
 
         return $this;
     }
