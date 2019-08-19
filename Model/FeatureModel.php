@@ -172,6 +172,7 @@ class FeatureModel
         if ($flush) {
             $this->em->flush();
         }
+        $this->clearCache($feature);
 
         return $this;
     }
@@ -191,6 +192,7 @@ class FeatureModel
         if ($flush) {
             $this->em->flush();
         }
+        $this->clearCache($feature);
 
         return $this;
     }
