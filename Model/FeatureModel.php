@@ -101,7 +101,7 @@ class FeatureModel
 
         $cacheKey = $this->cacheKeyGenerator->generate($featureName);
 
-        return $this->cache->save($cacheKey, $value, 0);
+        return $this->cache->save($cacheKey, $value, 3600);
     }
 
     /**
