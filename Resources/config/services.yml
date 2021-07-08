@@ -5,6 +5,9 @@ parameters:
     feature_toggle.command.create.class: Fintem\FeatureToggleBundle\Command\FeatureCreateCommand
     feature_toggle.command.enable.class: Fintem\FeatureToggleBundle\Command\FeatureEnableCommand
     feature_toggle.command.disable.class: Fintem\FeatureToggleBundle\Command\FeatureDisableCommand
+    feature_toggle.command.cache_clear.class: Fintem\FeatureToggleBundle\Command\FeatureCacheClearCommand
+    feature_toggle.command.cache_warmup.class: Fintem\FeatureToggleBundle\Command\FeatureCacheWarmupCommand
+    feature_toggle.cache_key_generator.class: Fintem\FeatureToggleBundle\Service\CacheKeyGenerator
 
 services:
 # Models
@@ -18,11 +21,26 @@ services:
     feature_toggle.status_checker:
         class: '%feature_toggle.status_checker.class%'
         arguments:
+            - '@feature_toggle.model.feature'
             - '@logger'
             - '@event_dispatcher'
-            - '@feature_toggle.model.feature'
+    feature_toggle.cache_key_generator:
+        class: '%feature_toggle.cache_key_generator.class%'
 
 # Commands
+    feature_toggle.command.cache_warmup:
+        class: '%feature_toggle.command.cache_warmup.class%'
+        arguments:
+            - '@feature_toggle.model.feature'
+            - '@feature_toggle.status_checker'
+        tags:
+            - { name: console.command }
+    feature_toggle.command.cache_clear:
+        class: '%feature_toggle.command.cache_clear.class%'
+        arguments:
+            - '@feature_toggle.model.feature'
+        tags:
+            - { name: console.command }
     feature_toggle.command.create:
         class: '%feature_toggle.command.create.class%'
         arguments:
